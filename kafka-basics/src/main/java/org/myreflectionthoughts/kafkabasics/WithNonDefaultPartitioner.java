@@ -1,16 +1,16 @@
 package org.myreflectionthoughts.kafkabasics;
 
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
-public class Producer {
-
-    private static final Logger log = LoggerFactory.getLogger(Producer.class.getSimpleName());
+public class WithNonDefaultPartitioner {
 
     public static void main(String[] args) {
 
@@ -29,16 +29,26 @@ public class Producer {
         KafkaProducer<String, String> producer = new KafkaProducer<>(producerProperties);
 
         // create a producer record
-        ProducerRecord<String,String> producerRecord = new ProducerRecord<>("kafka-learning","Hello-Kafjknka");
+        // pushing bigger batch of messages
 
-        // send data
-        producer.send(producerRecord);
 
-        // flush the producer
-        // tells the producer to send all the data and block until finished
-//        producer.flush();
+        ProducerRecord<String, String> producerRecord;
+        for (int i=0; i<40 ; i++) {
+            producerRecord = new ProducerRecord<>("kafka-learning", "Kafka-with-callbacks:- "+i);
 
-        // also calls producer.flush()
+            producer.send(producerRecord, new Callback() {
+                @Override
+                public void onCompletion(RecordMetadata metadata, Exception exception) {
+                    if(exception==null)
+                        System.out.println("Partition:- "+metadata.partition()+" Offset:- "+metadata.offset());
+                }
+            });
+
+            producer.flush();
+
+        }
         producer.close();
+
     }
+
 }
