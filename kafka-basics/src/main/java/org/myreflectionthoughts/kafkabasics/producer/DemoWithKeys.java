@@ -1,14 +1,18 @@
-package org.myreflectionthoughts.kafkabasics;
+package org.myreflectionthoughts.kafkabasics.producer;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 
 public class DemoWithKeys {
+
+    private static final Logger logger = LoggerFactory.getLogger(DemoWithKeys.class);
     public static void main(String[] args) {
 
         // conclusion:- same keys always end up in same partition
@@ -23,6 +27,7 @@ public class DemoWithKeys {
         // set the serializer properties
         producerProperties.setProperty("key.serializer", StringSerializer.class.getName());
         producerProperties.setProperty("value.serializer",StringSerializer.class.getName());
+        producerProperties.setProperty("retries","3");
 
         // create the producer
         KafkaProducer<String, String> producer = new KafkaProducer<>(producerProperties);
@@ -35,11 +40,11 @@ public class DemoWithKeys {
 
         for (int i=0; i<5 ; i++) {
 
-        for (int j=0;j<40;j++) {
+        for (int j=0;j<50;j++) {
 
             String topic = "kafka-learning-keys";
             String key = "id_"+j;
-            String message = "message:-"+i+""+j;
+            String message = "This is my message:-"+i+"+"+j;
 
             producerRecord = new ProducerRecord<>(topic, key,message);
 
@@ -47,13 +52,10 @@ public class DemoWithKeys {
                 @Override
                 public void onCompletion(RecordMetadata metadata, Exception exception) {
                     if (exception == null)
-                        System.out.println("Key:- "+key+" Partition:- " + metadata.partition() + " Offset:- " + metadata.offset());
+                        logger.debug("Key:- "+key+" Partition:- " + metadata.partition() + " Offset:- " + metadata.offset());
                 }
             });
-
             producer.flush();
-
-
         }
             try {
                 Thread.sleep(2000);

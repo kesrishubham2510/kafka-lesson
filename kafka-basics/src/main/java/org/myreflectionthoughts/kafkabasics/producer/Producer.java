@@ -1,4 +1,4 @@
-package org.myreflectionthoughts.kafkabasics;
+package org.myreflectionthoughts.kafkabasics.producer;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
