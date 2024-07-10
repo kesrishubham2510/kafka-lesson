@@ -1,4 +1,4 @@
-package org.myreflectionthoughts.kafkabasics;
+package org.myreflectionthoughts.kafkabasics.producer;
 
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -12,6 +12,8 @@ import java.util.Properties;
 
 public class WithNonDefaultPartitioner {
 
+    private static final Logger logger = LoggerFactory.getLogger(WithNonDefaultPartitioner.class.getSimpleName());
+
     public static void main(String[] args) {
 
         // create producer properties
@@ -20,6 +22,7 @@ public class WithNonDefaultPartitioner {
 
         // connecting to the localhost
         producerProperties.setProperty("bootstrap.servers","localhost:9092");
+        producerProperties.setProperty("retries","3");
 
         // set the serializer properties
         producerProperties.setProperty("key.serializer", StringSerializer.class.getName());
@@ -29,18 +32,18 @@ public class WithNonDefaultPartitioner {
         KafkaProducer<String, String> producer = new KafkaProducer<>(producerProperties);
 
         // create a producer record
+        ProducerRecord<String, String> producerRecord;
+
         // pushing bigger batch of messages
 
-
-        ProducerRecord<String, String> producerRecord;
         for (int i=0; i<40 ; i++) {
-            producerRecord = new ProducerRecord<>("kafka-learning", "Kafka-with-callbacks:- "+i);
+            producerRecord = new ProducerRecord<>("kafka-learning", "Kafka-with-callbacks:- " + i);
 
             producer.send(producerRecord, new Callback() {
                 @Override
                 public void onCompletion(RecordMetadata metadata, Exception exception) {
-                    if(exception==null)
-                        System.out.println("Partition:- "+metadata.partition()+" Offset:- "+metadata.offset());
+                    if (exception == null)
+                        logger.info("Partition:- " + metadata.partition() + " Offset:- " + metadata.offset());
                 }
             });
 
@@ -50,5 +53,4 @@ public class WithNonDefaultPartitioner {
         producer.close();
 
     }
-
 }
